@@ -22,22 +22,25 @@ group by f.film_id;
 -- 2. Get all pairs of customers that have rented the same film more than 3 times.
 
 
-select a.film_id, a.customer_id, b.customer_id, a.film_id
+
+select r1.customer_id as customer1, r2.customer_id as customer2, count(*) as count_same_films
 from
-    (select r.customer_id, i.film_id 
-     from rental r
-     left join inventory i on i.inventory_id = r.inventory_id
-     left join film f on f.film_id = i.film_id
-     group by r.customer_id, i.film_id
-     having count(*) > 3) a
+    (select r.customer_id, f.film_id from rental r
+    left join inventory i using (inventory_id)
+    left join film f using (film_id)) r1
 join
-    (select r.customer_id, i.film_id 
-     from rental r
-     left join inventory i on i.inventory_id = r.inventory_id
-     left join film f on f.film_id = i.film_id
-     group by r.customer_id, i.film_id
-     having count(*) > 3) b
-on a.film_id = b.film_id and a.customer_id <> b.customer_id;
+    (select r.customer_id, f.film_id from rental r
+    left join inventory i using (inventory_id)
+    left join film f using (film_id)) r2
+on 
+    r1.film_id = r2.film_id and r1.customer_id < r2.customer_id
+group by 
+    r1.customer_id, r2.customer_id
+having
+    count_same_films > 3
+order by 
+    count_same_films desc;
+
 
 
 
